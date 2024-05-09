@@ -34,10 +34,10 @@ def proximity(raster, rasterised, value):
 
     height, width = rasterised.shape # Find the height and width of the array
     cols, rows = np.meshgrid(np.arange(width), np.arange(height))
-    xs, ys = rasterio.transform.xy(raster.transform, rows, cols)
+    x_coordinate, y_coordinate = rasterio.transform.xy(raster.transform, rows, cols)
     # They are actually lists, convert them to arrays
-    xcoords = np.array(xs)
-    ycoords = np.array(ys)
+    xcoords = np.array(x_coordinate)
+    ycoords = np.array(y_coordinate)
 
     # find coords of points that have the target value in the rasterised raster
     xindex, yindex = np.where(rasterised==value)
@@ -47,8 +47,8 @@ def proximity(raster, rasterised, value):
 
     # now create all coords in the raster where we want distance
     target_coords = []
-    for xs, ys in zip(xcoords, ycoords):
-        for x, y in zip(xs,ys):
+    for x_coordinate, y_coordinate in zip(xcoords, ycoords):
+        for x, y in zip(x_coordinate,y_coordinate):
             target_coords.append([x, y])
 
     source_coords = np.array(source_coords)
