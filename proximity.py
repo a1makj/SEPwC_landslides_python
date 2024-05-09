@@ -30,7 +30,7 @@ def proximity(raster, rasterised, value):
     gt = raster.transform
     pixel_size_x = gt[0]
     pixel_size_y =-gt[4]
-    dx = math.sqrt(pixel_size_x * pixel_size_y)
+    diagonal_pixel_length = math.sqrt(pixel_size_x * pixel_size_y)
 
     height, width = rasterised.shape # Find the height and width of the array
     cols, rows = np.meshgrid(np.arange(width), np.arange(height))
@@ -60,6 +60,6 @@ def proximity(raster, rasterised, value):
         dist = dist.reshape(height,width)
         distance = np.minimum(distance,dist)
 
-    distance = distance / dx
+    distance = distance / diagonal_pixel_length
 
     return distance
