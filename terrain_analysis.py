@@ -1,8 +1,17 @@
 import argparse
 
 def convert_to_rasterio(raster_data, template_raster):
-  
-    return
+    #Converts ndarray to a raster
+    #raster_data = ndarray of zeros, template_raster = .tif file
+    #not sure what i'm doing here at all.
+    #need to figure out how to write the ndarray to a raster/tif file asap
+    
+    import rasterio
+    
+    with rasterio.open("raster_output_zeros.tif", "w+") as data:
+        data.write(raster_data, 1)
+    
+    return raster_data
 
 
 def extract_values_from_raster(raster, shape_object):
