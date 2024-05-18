@@ -7,12 +7,12 @@ from pylint.lint import Run
 from pylint.reporters import CollectingReporter
 from dataclasses import asdict
 import numpy as np
+import rasterio
 
 class TestTerrainAnalysis():
     
     def test_convert_rasterio(self):
 
-        import rasterio
 
         template = rasterio.open("test/data/raster_template.tif")
         data = np.zeros(template.shape)
@@ -62,7 +62,7 @@ class TestTerrainAnalysis():
                               0)
         assert type(df) == gpd.geodataframe.GeoDataFrame
         assert len(df) == 2
-        assert np.array_equal(np.array(df.columns), np.array(['elev', 'fault', 'slope', 'LC', 'Geol', 'ls']))
+        assert np.array_equal(np.array(df.columns), np.array(['elev','fault', 'slope', 'LC','Geol', 'ls']))
         assert df['ls'].to_list() == [0,0]
         
 
