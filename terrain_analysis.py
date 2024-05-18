@@ -1,36 +1,68 @@
+import pandas as pd
+import geopandas as gpd
 import argparse
+import sklearn
+from sklearn.ensemble import RandomForestClassifier
 
 def convert_to_rasterio(raster_data, template_raster):
-    #Converts ndarray to a raster
-    #raster_data = ndarray of zeros, template_raster = .tif file
-    #not sure what i'm doing here at all.
-    #need to figure out how to write the ndarray to a raster/tif file asap
+    ''' Assign the data in the array from band 1 to band1
+    '''
+    band1 = template_raster.read(1)
+
+    ''' Copy the values into raster_data using [:]
+    '''
+    raster_data[:] = band1
     
-    import rasterio
-    
-    with rasterio.open("raster_output_zeros.tif", "w+") as data:
-        data.write(raster_data, 1)
-    
-    return raster_data
+    ''' Return the file
+    '''
+    return template_raster
 
 
 def extract_values_from_raster(raster, shape_object):
-
-    return
+    #raster.transform(shape_object)
+    print(shape_object[0])
+    print(shape_object[1])
+    
+    return ([0,1])
 
 
 def make_classifier(x, y, verbose=False):
-
-    return
+    ''' Create the forest classifier
+    '''
+    rf = RandomForestClassifier(verbose=verbose)
+    
+    ''' Train the ForestClassifier on the data
+    '''
+    rf.fit(x,y) 
+    
+    ''' Return the RandomForestClassifier
+    '''
+    return rf
 
 def make_prob_raster_data(topo, geo, lc, dist_fault, slope, classifier):
 
     return
 
 def create_dataframe(topo, geo, lc, dist_fault, slope, shape, landslides):
+    ''' https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html
+        flatten to change from multimentional ND to 1d
+    '''
+    #d = {['elev','fault', 'slope', 'LC','Geol', 'ls']}
+    print("ENTRY create_dataframe")
+    d = {'elev':topo.read(1).flatten(),
+         'fault':geo.read(1).flatten(),
+         'slope':slope.read(1).flatten(),
+         'LC':lc.read(1).flatten(),
+         'Geol':geo.read(1).flatten(),
+         'ls':landslides}
+ 
+    #print(d)
+    df = pd.DataFrame(d)
+    print(df)
+    gf = gpd.geodataframe.GeoDataFrame(df)
 
-    return
-
+    print("EXIT create_dataframe")    
+    return(gf)
 
 def main():
 
