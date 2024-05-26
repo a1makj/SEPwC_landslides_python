@@ -50,7 +50,7 @@ class TestTerrainAnalysis():
         assert type(classifier) == sklearn.ensemble._forest.RandomForestClassifier
         assert classifier.n_classes_ == 2
 
-    def test_create_dataframe(self):
+    def "test_create_dataframe"(self):
 
         import geopandas as gpd
 
