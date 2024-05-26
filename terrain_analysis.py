@@ -1,3 +1,7 @@
+''' Copyright 2024 by Alma Jasper. CC-BY-SA.
+'''
+
+
 import argparse
 import pandas as pd
 import geopandas as gpd
