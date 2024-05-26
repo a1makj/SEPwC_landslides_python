@@ -3,14 +3,15 @@ import pandas as pd
 import geopandas as gpd
 from sklearn.ensemble import RandomForestClassifier
 import rasterio
-
+from rasterio import features
+import gemgis as gg
 
 def convert_to_rasterio(raster_data, template_raster):
     ''' Raster file read and converted into numpy array
-    
+
     Input: raster_data = numpy array, in the same shape as raster file
            template_raster = opened raster .tif file
-           
+ 
     Output: a raster file and a numpy array containing values represented
             within the raster file
     '''
@@ -35,7 +36,8 @@ def extract_values_from_raster(raster, shape_object):
 
     coords_list = []
 
-    for i, shape in enumerate(shape_object):
+    #for i, shape in enumerate(shape_object):
+    for shape in enumerate(shape_object):
         x_coord = shape.x
         y_coord = shape.y
         coords_list.append((x_coord, y_coord))
@@ -66,28 +68,27 @@ def make_classifier(x, y, verbose=False):
     return rand_forest
 
 def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
-    ''' Make a raster from the combination of the topography, geology, land cover, slope and distance from the fault
+    ''' Make a raster from the combination of the topography, geology,
+    land cover, slope and distance from the fault
     https://pygis.io/docs/e_raster_rasterize.html
     '''
     # convert shape file to raster
-    from rasterio import features
-    
-    #print(dist_fault)
-    geom = [shapes for shapes in dist_fault.geometry]
 
-    
+    #print(dist_fault)
+    geom = set(dist_fault.geometry)
+    #geom = [shapes for shapes in dist_fault.geometry]
+
     #print(geom)
-    
     rasterized = features.rasterize(geom,
                                     out_shape = topo.shape,
                                     fill=1,
                                     default_value=4,
                                     all_touched=True)
-    
+
     print(rasterized)
 
     print(topo.transform)
-    
+
     with rasterio.open("rasterized_dist_fault_temp.tif","w",
                         driver = "GTiff",
                         crs = topo.crs,
@@ -95,16 +96,15 @@ def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
                         dtype = rasterio.uint8,
                         count = 1,
                         width = topo.width,
-                        height = topo.height) as dst:  
+                        height = topo.height) as dst:
         dst.write(rasterized,indexes=1)
-    
+
     return rasterized
 
 def make_slope_raster_data(topo):
     ''' Make a slope raster from the topography
     
     '''
-    import gemgis as gg
     slope = gg.raster.calculate_slope(topo)
 
     return slope
@@ -164,13 +164,18 @@ def main():
     faultshapefile = gpd.read_file(args.faults)
     landslideshapefile = gpd.read_file(args.landslides)
 
-    # create the slope raster    
+    # create the slope raster
     slope = make_slope_raster_data(topo)
-    
+
     # create the probability raster
-    probability = make_prob_raster_data(topo, geol, landc, faultshapefile , landslideshapefile, slope)
-    
-    
+    probability = make_prob_raster_data(topo,
+                                        geol,
+                                        landc,
+                                        faultshapefile,
+                                        landslideshapefile,
+                                        slope)
+
+
 if __name__ == '__main__':
     main()
     
