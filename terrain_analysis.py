@@ -23,17 +23,21 @@ def extract_values_from_raster(raster, shape_object):
     '''
     ''' https://geopandas.org/en/stable/gallery/geopandas_rasterio_sample.html
         https://blog.hubspot.com/website/python-zip#:~:text=The%20%60zip%60%20function%20in%20Python,from%20all%20the%20input%20iterables.
+        https://www.geeksforgeeks.org/get-current-value-of-generator-in-python/
     ''' 
-    gt = raster.transform
-
-    #coord_list = [(x, y) for x, y in zip(shape_object["geometry"].x, shape_object["geometry"].y)]
-    #coord_list = [(340467.5710219807, 3843321.793904966)]
-    #print(coord_list)
-    vls = raster.sample((340467.5710219807, 3843321.793904966)) 
-    for current_vl in vls:
-        print(current_vl)
+    print(shape_object)
+    vls = raster.sample([(340467.5710219807, 3843321.793904966),
+                         (340477.621821591, 3843282.741739025)]) 
     
-    return vls
+
+    #print(shape_object)
+    current_list=[]
+    for current_vl in vls:
+        current_list.append(current_vl)
+    
+    #print(current_list)
+    
+    return current_list
 
 
 def make_classifier(x, y, verbose=False):
@@ -57,22 +61,18 @@ def create_dataframe(topo, geo, lc, dist_fault, slope, shape, landslides):
     ''' https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html
         flatten to change from multimentional ND to 1d
     '''
-    print(shape)
-
-    print("ENTRY create_dataframe")
-    d = {'elev':topo.read(1).flatten(),
-         'fault':geo.read(1).flatten(),
-         'slope':slope.read(1).flatten(),
-         'LC':lc.read(1).flatten(),
-         'Geol':geo.read(1).flatten(),
-         'ls':landslides}
+    d = {'elev':extract_values_from_raster(topo, shape),
+       'fault':extract_values_from_raster(dist_fault, shape),
+       'slope':extract_values_from_raster(slope, shape),
+       'LC':extract_values_from_raster(lc, shape),
+       'Geol':extract_values_from_raster(geo, shape),
+       'ls':landslides}
  
     print(d)
     df = pd.DataFrame(d)
     print(df)
     gf = gpd.geodataframe.GeoDataFrame(df)
 
-    print("EXIT create_dataframe")    
     return(gf)
 
 def main():
