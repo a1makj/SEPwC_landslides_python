@@ -79,19 +79,22 @@ def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
     # convert shape file to raster
 
     #print(dist_fault)
-    geom = set(dist_fault.geometry)
-    #geom = [shapes for shapes in dist_fault.geometry]
+    #geom = set(dist_fault.geometry)
+    geom = [shapes for shapes in dist_fault.geometry]
 
     #print(geom)
     rasterized = features.rasterize(geom,
                                     out_shape = topo.shape,
                                     fill=1,
-                                    default_value=4,
+                                    transform=(28.55, 0.00, 339253.75,
+                                               0.00, -28.55, 3846704.88,
+                                               0.00, 0.00, 1.00),
+                                    default_value=0,
                                     all_touched=True)
 
-    print(rasterized)
+    #print(rasterized)
 
-    print(topo.transform)
+    #print(topo.transform)
 
     with rasterio.open("rasterized_dist_fault_temp.tif","w",
                         driver = "GTiff",
