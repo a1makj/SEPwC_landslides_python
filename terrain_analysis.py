@@ -71,18 +71,14 @@ def make_classifier(x, y, verbose=False):
 
     return rand_forest
 
-def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
-    ''' Make a raster from the combination of the topography, geology,
-    land cover, slope and distance from the fault
+
+def make_fault_raster(topo, dist_fault):
+    ''' Convert fault line shapefile to raster
     https://pygis.io/docs/e_raster_rasterize.html
     '''
-    # convert shape file to raster
 
-    #print(dist_fault)
-    #geom = set(dist_fault.geometry)
     geom = [shapes for shapes in dist_fault.geometry]
 
-    #print(geom)
     rasterized = features.rasterize(geom,
                                     out_shape = topo.shape,
                                     fill=1,
@@ -91,10 +87,6 @@ def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
                                                0.00, 0.00, 1.00),
                                     default_value=0,
                                     all_touched=True)
-
-    #print(rasterized)
-
-    #print(topo.transform)
 
     with rasterio.open("rasterized_dist_fault_temp.tif","w",
                         driver = "GTiff",
@@ -108,9 +100,13 @@ def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
 
     return rasterized
 
+def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
+
+
+    return
+
 def make_slope_raster_data(topo):
     ''' Make a slope raster from the topography
-    
     '''
     slope = gg.raster.calculate_slope(topo)
 
@@ -163,7 +159,7 @@ def main():
 
     args = parser.parse_args()
 
-    print(args)
+    #print(args)
 
     topo = rasterio.open(args.topography)
     geol = rasterio.open(args.geology)
@@ -175,12 +171,8 @@ def main():
     slope = make_slope_raster_data(topo)
 
     # create the probability raster
-    probability = make_prob_raster_data(topo,
-                                        geol,
-                                        landc,
-                                        faultshapefile,
-                                        landslideshapefile,
-                                        slope)
+    fault_raster = make_fault_raster(topo,
+                                     faultshapefile)
 
 
 if __name__ == '__main__':
