@@ -1,7 +1,6 @@
 ''' Copyright 2024 by Alma Jasper. CC-BY-SA.
 '''
 
-
 import argparse
 import pandas as pd
 import geopandas as gpd
@@ -9,6 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 import rasterio
 from rasterio import features
 import gemgis as gg
+
 
 def convert_to_rasterio(raster_data, template_raster):
     ''' Raster file read and converted into numpy array
@@ -29,18 +29,18 @@ def convert_to_rasterio(raster_data, template_raster):
 
 
 def extract_values_from_raster(raster, shape_object):
-    ''' Creates a list with data contained within the raster template,
-    associated with the two provided geometries
+    ''' Creates a list with data from the raster template, associated with
+        two provided geometries
 
     Input: raster = an opened raster .tif file
            shape_object = geometries associated with two test points
 
-    Output = a list containing tworaster values associated with the test points
+    Output = a list containing two raster values associated
+             with the test points
     '''
 
     coords_list = []
 
-    #for i, shape in enumerate(shape_object):
     for shape in enumerate(shape_object):
         x_coord = shape.x
         y_coord = shape.y
@@ -58,27 +58,32 @@ def extract_values_from_raster(raster, shape_object):
     return current_list
 
 
-def make_classifier(x, y, verbose=False):
+def make_classifier(rand_datax, rand_datay, verbose=False):
     ''' Create the forest classifier
-    
+
+    Input:
+
+    Output: Random forest classifier
     '''
     rand_forest = RandomForestClassifier(verbose=verbose)
 
-    # Train the ForestClassifier on the data
-    rand_forest.fit(x,y)
-
-    # Return the RandomForestClassifier
+    rand_forest.fit(rand_datax,rand_datay)
 
     return rand_forest
 
 
 def make_fault_raster(topo, dist_fault):
-    ''' Convert fault line shapefile to raster
-    https://pygis.io/docs/e_raster_rasterize.html
+    ''' Convert fault line shapefile to raster, and save to a file
+
+    Input: topo = an opened raster .tif file
+           dist_fault = an opened shapefile (.shp)
+
+    Output: faultline data, as a raster
     '''
 
     geom = [shapes for shapes in dist_fault.geometry]
 
+    # https://pygis.io/docs/e_raster_rasterize.html
     rasterized = features.rasterize(geom,
                                     out_shape = topo.shape,
                                     fill=1,
@@ -100,34 +105,62 @@ def make_fault_raster(topo, dist_fault):
 
     return rasterized
 
-def make_prob_raster_data(topo, geo, land_cover, dist_fault, slope, classifier):
+
+def make_prob_raster_data(topo,
+                          geo,
+                          land_cover,
+                          dist_fault,
+                          slope, 
+                          classifier):
 
 
     return
 
+
 def make_slope_raster_data(topo):
-    ''' Make a slope raster from the topography
+    ''' Make a slope raster from the topography data
+
+    Input: topo = an opened raster .tif file
+
+    Output: slope data, as a raster
     '''
     slope = gg.raster.calculate_slope(topo)
 
     return slope
 
-def create_dataframe(topo, geo, land_cover, dist_fault, slope, shape, landslides):
-    ''' https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html
-        flatten to change from multimentional ND to 1d
+
+def create_dataframe(topo,
+                     geo,
+                     land_cover,
+                     dist_fault,
+                     slope,
+                     shape,
+                     landslides):
+    ''' GeoDataFrame created, containing all provided geographical data
+        associated with the two desired geometries
+
+        Input: topo, geo, land_cover, dist_fault, slope = an opened raster
+               .tif file
+               shape = a list containing geometries of two desired test points
+               landslides = the value "0"
+
+        Output: the GeoDataFrame
     '''
+
     data_dict = {'elev':extract_values_from_raster(topo, shape),
        'fault':extract_values_from_raster(dist_fault, shape),
        'slope':extract_values_from_raster(slope, shape),
        'LC':extract_values_from_raster(land_cover, shape),
        'Geol':extract_values_from_raster(geo, shape),
        'ls':landslides}
+    # https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html
 
     data_frame = pd.DataFrame(data_dict)
 
     geodata_frame = gpd.geodataframe.GeoDataFrame(data_frame)
 
     return geodata_frame
+
 
 def main():
 
@@ -159,18 +192,16 @@ def main():
 
     args = parser.parse_args()
 
-    #print(args)
-
     topo = rasterio.open(args.topography)
     geol = rasterio.open(args.geology)
     landc = rasterio.open(args.landcover)
     faultshapefile = gpd.read_file(args.faults)
     landslideshapefile = gpd.read_file(args.landslides)
 
-    # create the slope raster
+    # Create the slope raster
     slope = make_slope_raster_data(topo)
 
-    # create the probability raster
+    # Create the probability raster
     fault_raster = make_fault_raster(topo,
                                      faultshapefile)
 
