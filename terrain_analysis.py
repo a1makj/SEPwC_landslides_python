@@ -41,7 +41,7 @@ def extract_values_from_raster(raster, shape_object):
 
     coords_list = []
 
-    for shape in enumerate(shape_object):
+    for i, shape in enumerate(shape_object):
         x_coord = shape.x
         y_coord = shape.y
         coords_list.append((x_coord, y_coord))
@@ -81,7 +81,8 @@ def make_fault_raster(topo, dist_fault):
     Output: faultline data, as a raster
     '''
 
-    geom = [shapes for shapes in dist_fault.geometry]
+    #geom = [shapes for shapes in dist_fault.geometry]
+    geom = list(dist_fault.geometry)
 
     # https://pygis.io/docs/e_raster_rasterize.html
     rasterized = features.rasterize(geom,
@@ -110,7 +111,7 @@ def make_prob_raster_data(topo,
                           geo,
                           land_cover,
                           dist_fault,
-                          slope, 
+                          slope,
                           classifier):
 
 
