@@ -58,7 +58,7 @@ def extract_values_from_raster(raster, shape_object):
     return current_list
 
 
-def make_classifier(rand_datax, rand_datay, verbose=False):
+def make_classifier(rand_data_x, rand_data_y, verbose=False):
     ''' Create the forest classifier
 
     Input:
@@ -67,7 +67,7 @@ def make_classifier(rand_datax, rand_datay, verbose=False):
     '''
     rand_forest = RandomForestClassifier(verbose=verbose)
 
-    rand_forest.fit(rand_datax,rand_datay)
+    rand_forest.fit(rand_data_x,rand_data_y)
 
     return rand_forest
 
@@ -78,21 +78,20 @@ def make_fault_raster(topo, dist_fault):
     Input: topo = an opened raster .tif file
            dist_fault = an opened shapefile (.shp)
 
-    Output: faultline data, as a raster
+    Output: faultline data, as an array
     '''
 
-    #geom = [shapes for shapes in dist_fault.geometry]
     geom = list(dist_fault.geometry)
 
-    # https://pygis.io/docs/e_raster_rasterize.html
     rasterized = features.rasterize(geom,
                                     out_shape = topo.shape,
-                                    fill=1,
+                                    fill=0,
                                     transform=(28.55, 0.00, 339253.75,
                                                0.00, -28.55, 3846704.88,
                                                0.00, 0.00, 1.00),
-                                    default_value=0,
+                                    default_value=1,
                                     all_touched=True)
+    # https://pygis.io/docs/e_raster_rasterize.html
 
     with rasterio.open("rasterized_dist_fault_temp.tif","w",
                         driver = "GTiff",
@@ -128,6 +127,35 @@ def make_slope_raster_data(topo):
     slope = gg.raster.calculate_slope(topo)
 
     return slope
+
+
+def create_dist_from_fault_raster(fault_template_raster, topo):
+    ''' Creates a distance from fault raster
+    
+    Input: fault_template_rater = ndarray with faultline location data
+           topo = template .tif file
+           
+    Output: "distance from faultline" data for all coordinates in template
+    '''
+    from proximity import proximity
+
+    distance = proximity(topo, fault_template_raster, 1)
+
+    distance *= 255.0/distance.max()
+    # distance array is normalised between 0-255
+    # https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
+
+    with rasterio.open("distance_from_fault.tif","w",
+                        driver = "GTiff",
+                        crs = topo.crs,
+                        transform = topo.transform,
+                        dtype = rasterio.uint8,
+                        count = 1,
+                        width = topo.width,
+                        height = topo.height) as dst:
+        dst.write(distance,indexes=1)
+
+    return distance
 
 
 def create_dataframe(topo,
@@ -202,9 +230,13 @@ def main():
     # Create the slope raster
     slope = make_slope_raster_data(topo)
 
-    # Create the probability raster
+    # Create a faultline raster
     fault_raster = make_fault_raster(topo,
                                      faultshapefile)
+
+    # Create a raster with each pixel's minimum distance from a faultline
+    distance_from_faultlines = create_dist_from_fault_raster(fault_raster,
+                                                             topo)
 
 
 if __name__ == '__main__':
