@@ -8,7 +8,6 @@ from sklearn.ensemble import RandomForestClassifier
 import rasterio
 from rasterio import features
 import gemgis as gg
-import numpy as np
 from proximity import proximity
 
 
@@ -148,7 +147,13 @@ def make_prob_raster_data(topo,
 
     #extract_values_from_raster(topo, )
 
-    #create_dataframe()
+    #landslides_gdf = create_dataframe(topo,
+                      #geol,
+                      #landc,
+                      #distance_from_faultlines,
+                      #slope_raster,
+                      #extracted geometries of the landslides,
+                      #landslides_raster)
 
     #return
 
@@ -242,16 +247,8 @@ def main():
                                              landslideshapefile,
                                              "landslide_occurance_temp.tif")
 
-    #landslides_gdf = create_dataframe(topo,
-                      #geol,
-                      #landc,
-                      #distance_from_faultlines,
-                      #slope_raster,
-                      #extracted geometries of the landslides,
-                      #landslides_raster)
-
-    landslide_coords = np.array(landslideshapefile.exterior)
-    # https://towardsdatascience.com/geospatial-adventures-step-1-shapely-e911e4f86361
+    landslide_coords = list(landslideshapefile.geometry)
+    #values1 = extract_values_from_raster(topo, landslide_coords)
 
 
 
