@@ -1,4 +1,4 @@
-''' Copyright 2024 by Alma Jasper. CC-BY-SA.
+''' Copyright 2024. CC-BY-SA.
 '''
 
 import argparse
@@ -60,16 +60,17 @@ def extract_values_from_raster(raster, shape_object):
     return current_list
 
 
-def make_classifier(rand_data_x, rand_data_y, verbose=False):
+def make_classifier(x_data, y_data, verbose=False):
     ''' Create the forest classifier
 
-    Input:
+    Input: x_data = two columns with test and train data
+           y_data = column with 0s and 1s for classification
 
     Output: Random forest classifier
     '''
     rand_forest = RandomForestClassifier(verbose=verbose)
 
-    rand_forest.fit(rand_data_x,rand_data_y)
+    rand_forest.fit(x_data,y_data)
 
     return rand_forest
 
@@ -127,8 +128,8 @@ def create_dist_from_fault_raster(fault_template_raster, topo):
 
     distance = proximity(topo, fault_template_raster, 1)
 
-    distance *= 255.0/distance.max()
     # distance array is normalised between 0-255
+    distance *= 255.0/distance.max()
     # https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
 
     save_to_file(topo, distance, "distance_from_fault.tif")
@@ -218,8 +219,8 @@ def main():
     args = parser.parse_args()
 
     topo = rasterio.open(args.topography)
-    geol = rasterio.open(args.geology)
-    landc = rasterio.open(args.landcover)
+    #geol = rasterio.open(args.geology)
+    #landc = rasterio.open(args.landcover)
     faultshapefile = gpd.read_file(args.faults)
     landslideshapefile = gpd.read_file(args.landslides)
 
