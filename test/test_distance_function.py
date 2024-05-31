@@ -6,6 +6,7 @@ from proximity import *
 from pylint.lint import Run
 from pylint.reporters import CollectingReporter
 from dataclasses import asdict
+import rasterio
 
 class TestProximity():
     
