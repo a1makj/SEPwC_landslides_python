@@ -8,6 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 import rasterio
 from rasterio import features
 import gemgis as gg
+import numpy as np
 from proximity import proximity
 
 
@@ -31,7 +32,7 @@ def convert_to_rasterio(raster_data, template_raster):
 
 def extract_values_from_raster(raster, shape_object):
     ''' Creates a list with data from the raster template, associated with
-        two provided geometries
+        provided geometries
 
     Input: raster = an opened raster .tif file
            shape_object = geometries associated with two test points
@@ -94,6 +95,14 @@ def make_raster_from_shp(template, shapefile, file_name):
                                     all_touched=True)
     # https://pygis.io/docs/e_raster_rasterize.html
 
+    save_to_file(template, rasterized, file_name)
+
+    return rasterized
+
+
+def save_to_file(template, to_save, file_name):
+    ''' Saves a dataset to a .tif file
+    '''
     with rasterio.open(file_name,"w",
                         driver = "GTiff",
                         crs = template.crs,
@@ -102,21 +111,9 @@ def make_raster_from_shp(template, shapefile, file_name):
                         count = 1,
                         width = template.width,
                         height = template.height) as dst:
-        dst.write(rasterized,indexes=1)
+        dst.write(to_save,indexes=1)
 
-    return rasterized
-
-
-def make_prob_raster_data(topo,
-                          geo,
-                          land_cover,
-                          dist_fault,
-                          slope,
-                          classifier):
-    ''' Creating the landslide probability raster data
-    '''
-
-    return
+    return to_save
 
 
 def create_dist_from_fault_raster(fault_template_raster, topo):
@@ -134,17 +131,25 @@ def create_dist_from_fault_raster(fault_template_raster, topo):
     # distance array is normalised between 0-255
     # https://stackoverflow.com/questions/1735025/how-to-normalize-a-numpy-array-to-within-a-certain-range
 
-    with rasterio.open("distance_from_fault.tif","w",
-                        driver = "GTiff",
-                        crs = topo.crs,
-                        transform = topo.transform,
-                        dtype = rasterio.uint8,
-                        count = 1,
-                        width = topo.width,
-                        height = topo.height) as dst:
-        dst.write(distance,indexes=1)
+    save_to_file(topo, distance, "distance_from_fault.tif")
 
     return distance
+
+
+def make_prob_raster_data(topo,
+                          geology,
+                          land_cover,
+                          dist_fault,
+                          slope,
+                          classifier):
+    ''' Creating the landslide probability raster data
+    '''
+
+    #extract_values_from_raster(topo, )
+
+    #create_dataframe()
+
+    #return
 
 
 def create_dataframe(topo,
@@ -155,7 +160,7 @@ def create_dataframe(topo,
                      shape,
                      landslides):
     ''' GeoDataFrame created, containing all provided geographical data
-        associated with the desired geometries
+        associated with desired geometries
 
         Input: topo, geo, land_cover, dist_fault, slope = an opened raster
                .tif file
@@ -181,6 +186,8 @@ def create_dataframe(topo,
 
 
 def main():
+    ''' Establish argparse module
+    '''
 
     parser = argparse.ArgumentParser(
                      prog="Landslide hazard using ML",
@@ -218,27 +225,33 @@ def main():
 
     # Create the slope raster
     slope_raster = gg.raster.calculate_slope(topo)
+    slope_raster = save_to_file(topo, slope_raster, "slope_temp.tif")
 
     # Create a faultline raster, where 1=faultline and 0=no faultline
     fault_raster = make_raster_from_shp(topo,
                                         faultshapefile,
                                         "faultlines_temp.tif")
 
-    # Create a raster with each pixel's minimum distance from a faultline
+    # Create a "minimum distance from faultline" raster
     distance_from_faultlines = create_dist_from_fault_raster(fault_raster,
                                                              topo)
-
-    #landslides_gdf = create_dataframe(topo,
-                                      #geol,
-                                      #landc,
-                                      #faultshapefile,
-                                      #slope_raster,
-                                      #landslideshapefile)
 
     # Create a raster where 1=landslide occurance and 0=no landslide occurance
     landslides_raster = make_raster_from_shp(topo,
                                              landslideshapefile,
                                              "landslide_occurance_temp.tif")
+
+    #landslides_gdf = create_dataframe(topo,
+                      #geol,
+                      #landc,
+                      #distance_from_faultlines,
+                      #slope_raster,
+                      #extracted geometries of the landslides,
+                      #landslides_raster)
+
+    landslide_coords = np.array(landslideshapefile.exterior)
+    # https://towardsdatascience.com/geospatial-adventures-step-1-shapely-e911e4f86361
+
 
 
 if __name__ == '__main__':
